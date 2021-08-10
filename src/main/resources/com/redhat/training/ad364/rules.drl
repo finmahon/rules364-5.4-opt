@@ -1,0 +1,32 @@
+package com.redhat.training.ad364;
+
+import com.redhat.training.ad364.model.Student;
+import com.redhat.training.ad364.model.Grade;
+import com.redhat.training.ad364.model.FinanceAidRequest;
+import com.redhat.training.ad364.model.FinanceAidGranted;
+
+
+import com.redhat.training.ad364.util.GradeUtil;
+import com.redhat.training.ad364.util.FinanceUtil;
+
+import java.util.List;
+
+
+rule "set finaid"
+   when
+       $student : Student ( GradeUtil.calculateGPA(grades) < 3 )
+   then
+       modify($student) { setEligibleForFinanceAid(true) };
+end
+
+rule "grant finaid"
+  when
+      $s1: Student( appliedForFinanceAid == true, eligibleForFinanceAid == true )
+      FinanceAidRequest(student == $s1) from FinanceUtil.getFinancialAidRequests()
+  then
+      FinanceAidGranted financeAidGranted = new FinanceAidGranted($s1);
+      insertLogical(financeAidGranted);
+end
+
+
+
